@@ -1,7 +1,23 @@
+import crypto from 'crypto'
 import { getAuth } from 'firebase-admin/auth'
 import { app } from '../config/firebase.js';
 import User from '../models/user.model.js';
 import redis from '../../../shared/redis/redis.js';
+import axios from 'axios';
+
+const PAYMENT_SERVICE_URL = process.env.PAYMENT_SERVICE || "http://localhost:8004";
+
+const initPaymentUser = async (userId, email, name) => {
+    try {
+        await axios.post(`${PAYMENT_SERVICE_URL}/api/payment/credits/init`, {
+            userId: String(userId),
+            email: email || "",
+            name: name || "",
+        }, { timeout: 5000 });
+    } catch (error) {
+        console.error("Failed to init payment user:", error?.message || error);
+    }
+};
 
 export const login = async (req, res) => {
     try {
@@ -19,6 +35,8 @@ export const login = async (req, res) => {
                 email: decoded.email,
                 avatar: decoded.picture,
             })
+
+            initPaymentUser(user._id, user.email, user.name);
         }
 
         const sessionId = crypto.randomUUID();

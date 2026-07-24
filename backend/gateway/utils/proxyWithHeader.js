@@ -13,4 +13,3 @@ export const proxyWithHeader = (serviceUrl) => {
         }
     })
 }
-
